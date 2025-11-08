@@ -1,0 +1,28 @@
+[
+  {
+    "id": "oshee-2025-11-07-001",
+    "type": "planned",
+    "area_id": "komuna_parisit",
+    "starts_at": "2025-11-07T08:00:00+01:00",
+    "ends_at": "2025-11-07T12:00:00+01:00",
+    "confidence": "official",
+    "source": {
+      "label": "OSHEE notice",
+      "url": "https://example.com/oshee"
+    },
+    "note": "Maintenance works"
+  },
+  {
+    "id": "user-2025-11-07-astir-1",
+    "type": "unplanned",
+    "area_id": "astir",
+    "starts_at": "2025-11-07T10:35:00+01:00",
+    "ends_at": null,
+    "confidence": "crowd",
+    "source": {
+      "label": "User report",
+      "url": null
+    },
+    "note": "Outage reported near Rruga Teodor Keko"
+  }
+]

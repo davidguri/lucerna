@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Lucerna</string>
+    <string name="title_activity_main">Lucerna</string>
+    <string name="package_name">com.lucerna.app</string>
+    <string name="custom_url_scheme">com.lucerna.app</string>
+</resources>

@@ -1,38 +1,148 @@
-# sv
+# Lucerna
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A SvelteKit app wrapped with Capacitor for iOS and Android deployment.
 
-## Creating a project
+## Development
 
-If you're seeing this, you've probably already done this step. Congrats!
+### Prerequisites
 
-```sh
-# create a new project in the current directory
-npx sv create
+- Node.js (v16 or higher)
+- bun
 
-# create a new project in my-app
-npx sv create my-app
-```
+### Local Development
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Start the development server:
 
 ```sh
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+# or
+bun run dev
 ```
 
-## Building
+## Building for Mobile
 
-To create a production version of your app:
+This project uses Capacitor to build native mobile apps for iOS and Android.
+
+### Prerequisites for Mobile Development
+
+#### For Android Development (Windows/Mac):
+- **Java Development Kit (JDK)**: JDK 11 or higher
+- **Android Studio**: Latest stable version
+- **Android SDK**: API level 22 or higher
+
+#### For iOS Development (Mac only):
+- **macOS**: 10.15 or higher
+- **Xcode**: Latest stable version (requires macOS)
+- **iOS Simulator** or physical iOS device
+
+### Mobile Build Commands
 
 ```sh
-npm run build
+# Build and sync all platforms
+npm run build:sync
+
+# Build and sync only iOS
+npm run build:sync:ios
+
+# Build and sync only Android
+npm run build:sync:android
 ```
 
-You can preview the production build with `npm run preview`.
+### Running on Devices/Emulators
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+#### Android
+
+**On Windows:**
+1. Open Android Studio
+2. Open the `android` folder in this project
+3. Wait for Gradle sync to complete
+4. Run on emulator: `npx cap run android`
+5. Or open in Android Studio and click "Run"
+
+**On Mac:**
+1. Same as Windows, or use command line:
+   ```sh
+   npx cap open android  # Opens in Android Studio
+   npx cap run android   # Runs on connected device/emulator
+   ```
+
+#### iOS (Mac only)
+
+**On Mac:**
+1. Open Xcode:
+   ```sh
+   npx cap open ios
+   ```
+
+2. In Xcode:
+   - Select your target device/simulator
+   - Click the play button to build and run
+
+3. Or run directly:
+   ```sh
+   npx cap run ios
+   ```
+
+### Platform-Specific Notes
+
+#### Windows
+- Android development works perfectly
+- iOS development requires a Mac (you can develop iOS apps on Windows, but building requires macOS)
+- Use PowerShell or Command Prompt for all commands
+
+#### Mac
+- Full support for both iOS and Android development
+- Use Terminal for all commands
+- Xcode is required for iOS development
+
+### Troubleshooting
+
+#### Common Issues
+
+1. **Build fails**: Make sure you've run `npm run build:sync` before opening native IDEs
+
+2. **Android Studio issues**:
+   - Ensure JDK is properly installed and JAVA_HOME is set
+   - Try `File > Invalidate Caches / Restart` in Android Studio
+
+3. **iOS build issues**:
+   - Ensure Xcode is updated
+   - Run `sudo xcodebuild -license accept` if prompted
+   - Clean build folder in Xcode: `Product > Clean Build Folder`
+
+4. **Sync issues**:
+   - Delete `node_modules` and reinstall: `rm -rf node_modules && npm install`
+   - Run `npx cap sync` after any dependency changes
+
+#### Live Reload (Development)
+
+For faster development with live reload:
+
+1. Start the dev server: `npm run dev`
+2. In another terminal: `npx cap run android` or `npx cap run ios`
+3. Changes will hot-reload automatically
+
+## Project Structure
+
+- `src/` - SvelteKit application source
+- `android/` - Android native project (generated)
+- `ios/` - iOS native project (generated)
+- `capacitor.config.ts` - Capacitor configuration
+
+## Deployment
+
+### Android
+- Build APK/AAB in Android Studio
+- Use Google Play Console for distribution
+
+### iOS
+- Build in Xcode
+- Use App Store Connect for distribution
+- Requires Apple Developer Program membership
+
+## Contributing
+
+1. Make changes to the SvelteKit app
+2. Test on web: `npm run dev`
+3. Build and sync: `npm run build:sync`
+4. Test on mobile platforms

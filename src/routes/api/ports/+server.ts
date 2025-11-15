@@ -2,9 +2,6 @@ import type { RequestHandler } from './$types';
 
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 
-// Albania harbours & marinas via OSM seamark tags
-// - area["ISO3166-1"="AL"][admin_level=2] gets Albania as an area
-// - we grab harbour-related seamarks as nodes (good enough for ports overview)
 const OVERPASS_QUERY = `
 [out:json][timeout:60];
 
@@ -57,7 +54,6 @@ function overpassToGeoJSON(data: { elements: OverpassElement[] }) {
   } as const;
 }
 
-// Optional: super basic in-memory cache to avoid hammering Overpass
 let cached: { json: string; fetchedAt: number } | null = null;
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
@@ -76,7 +72,6 @@ export const GET: RequestHandler = async () => {
     method: 'POST',
     headers: {
       'Content-Type': 'text/plain',
-      // Overpass etiquette: identify your app + contact
       'User-Agent': 'Illyra/0.1 (your-email@example.com)'
     },
     body: OVERPASS_QUERY

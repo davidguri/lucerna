@@ -1,6 +1,5 @@
 import type { RequestHandler } from './$types';
 
-// Region bounds (Adriatic near Albania) and grid step for a denser sampling
 const LAT_MIN = 39.0;
 const LAT_MAX = 42.5;
 const LON_MIN = 18.5;
@@ -8,13 +7,11 @@ const LON_MAX = 21.5;
 const GRID_STEP = 0.25; // degrees
 
 const MARINE_BASE = 'https://marine-api.open-meteo.com/v1/marine';
-// Enrich with wind/swell components for more extensive data
 const HOURLY_VARS =
   'wave_height,wave_direction,wave_period,' +
   'wind_wave_height,wind_wave_direction,wind_wave_period,' +
   'swell_wave_height,swell_wave_direction,swell_wave_period';
 
-// simple in-memory cache
 let cached: { json: string; fetchedAt: number } | null = null;
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -22,7 +19,6 @@ function buildGridPairs(): Array<{ lat: number; lon: number }> {
   const pairs: Array<{ lat: number; lon: number }> = [];
   for (let lat = LAT_MIN; lat <= LAT_MAX + 1e-9; lat += GRID_STEP) {
     for (let lon = LON_MIN; lon <= LON_MAX + 1e-9; lon += GRID_STEP) {
-      // round coords to 3 decimals to avoid FP artifacts in URLs
       const rlat = Math.round(lat * 1000) / 1000;
       const rlon = Math.round(lon * 1000) / 1000;
       pairs.push({ lat: rlat, lon: rlon });
@@ -48,7 +44,6 @@ export const GET: RequestHandler = async () => {
     });
   }
 
-  // Fetch per point with a concurrency cap to avoid too many parallel requests
   const pairs = buildGridPairs();
   const features: any[] = [];
   const CHUNK_SIZE = 24; // limit parallelism
@@ -71,7 +66,6 @@ export const GET: RequestHandler = async () => {
           const data = (await res.json()) as any;
 
           const times: string[] = (data?.hourly?.time as string[]) ?? [];
-          // pick the index closest to "now" for more accurate current conditions
           const nowMs = Date.now();
           let idx = 0;
           if (times.length > 0) {

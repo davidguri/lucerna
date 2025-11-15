@@ -1,6 +1,5 @@
 import type { RequestHandler } from './$types';
 
-// Region bounds and denser grid step (match waves endpoint)
 const LAT_MIN = 39.0;
 const LAT_MAX = 42.5;
 const LON_MIN = 18.5;
@@ -10,7 +9,6 @@ const GRID_STEP = 0.25;
 const MARINE_BASE = 'https://marine-api.open-meteo.com/v1/marine';
 const HOURLY_VARS = 'wave_height';
 
-// simple in-memory cache
 let cached: { json: string; fetchedAt: number } | null = null;
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -50,7 +48,6 @@ export const GET: RequestHandler = async () => {
     });
   }
 
-  // Fetch with concurrency cap
   const pairs = buildGridPairs();
   const features: any[] = [];
   const CHUNK_SIZE = 24;

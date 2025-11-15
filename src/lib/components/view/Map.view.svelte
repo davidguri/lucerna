@@ -8,22 +8,17 @@
 	const dispatch = createEventDispatcher<{ select: AreaPayload }>();
 	let map: maplibregl.Map;
 
-	// Basemap
 	const styleUrl = `https://api.maptiler.com/maps/darkmatter/style.json?key=${PUBLIC_MAP_TILER_API}`;
-
-	// Albania region with padding
 	const CENTER_ALBANIA: [number, number] = [20.0, 41.3];
 	const ALBANIA_BOUNDS: [[number, number], [number, number]] = [
-		[18.0, 38.6], // Southwest corner with padding
-		[22.1, 43.9]  // Northeast corner with padding
+		[18.0, 38.6],
+		[22.1, 43.9]
 	];
 
-	// ASIG endpoints / layer
 	const WFS_BASE = 'https://geoportal.asig.gov.al/service/zrpp/wfs';
 	const WMS_BASE = 'https://geoportal.asig.gov.al/service/zrpp/wms';
 	const LAYER = 'zrpp:zona_kadastrale_qkd_042025';
 
-	// ---------- Utils ----------
 	function buildWfsUrl_V20() {
 		const [[minX, minY], [maxX, maxY]] = ALBANIA_BOUNDS;
 		const p = new URLSearchParams({
@@ -79,7 +74,6 @@
 		return [x, y];
 	}
 
-	// AIS stream (via server-sent events proxy)
 	let es: EventSource | null = null;
 	let vessels: Map<string, any> = new Map();
 	let waveRefreshTimer: number | null = null;
@@ -90,10 +84,7 @@
 			if (es) es.close();
 			es = new EventSource('/api/ais/stream');
 
-			// Optional: react to server status events
-			es.addEventListener('ready', () => {
-				// stream is ready
-			});
+			es.addEventListener('ready', () => {});
 			es.addEventListener('status', (ev: MessageEvent) => {
 				try {
 					const s = JSON.parse(ev.data);
@@ -120,7 +111,6 @@
 			};
 
 			es.onerror = () => {
-				// reconnect on error
 				es?.close();
 				setTimeout(connectAISWebSocket, 3000);
 			};
@@ -156,22 +146,18 @@
 		}
 	}
 
-	// Ensure AIS points render above all other overlays
 	function bringAisToFront() {
 		try {
 			if (!map.getLayer('ais-vessels')) return;
-			// move without "before" puts it at the very top
 			map.moveLayer('ais-vessels');
 		} catch {}
 	}
 
-	// Find a safe "before" layer id (prefer first label/symbol layer)
 	function findBeforeLabelLayerId(m: maplibregl.Map): string | undefined {
 		try {
 			const style = m.getStyle();
 			const layers = style?.layers ?? [];
 
-			// Common label layer ids across MapTiler/Mapbox styles
 			const preferredIds = [
 				'place_label',
 				'poi_label',
@@ -186,7 +172,6 @@
 				if (layers.some(l => l.id === id)) return id;
 			}
 
-			// Fallback: first symbol layer (usually labels)
 			const firstSymbol = layers.find(l => l.type === 'symbol');
 			return firstSymbol?.id;
 		} catch {
@@ -194,10 +179,8 @@
 		}
 	}
 
-	// ---------- Ports (Overpass via /api/ports) ----------
 	function addPortsLayer() {
 		if (!map) return;
-
 
 		map.addSource('illyra-ports', {
 			type: 'geojson',
@@ -267,7 +250,6 @@
 			map.getCanvas().style.cursor = '';
 		});
 
-		// Load data on main thread to avoid worker fetch issues in dev
 		fetch('/api/ports')
 			.then(async (r) => {
 				if (!r.ok) throw new Error(`Failed to fetch /api/ports: ${r.status}`);
@@ -285,7 +267,6 @@
 			});
 	}
 
-	// ---------- Waves (Open-Meteo via /api/sea/waves) ----------
 	async function addWaveGridLayer(m: maplibregl.Map) {
 		try {
 			const beforeId = findBeforeLabelLayerId(m);
@@ -302,7 +283,6 @@
 				} catch {}
 			}
 
-			// initial load
 			{
 				const res = await fetch('/api/sea/waves');
 				if (!res.ok) return;
@@ -313,7 +293,6 @@
 					data: geojson
 				});
 
-				// circles sized/colored by wave height
 				m.addLayer({
 					id: 'illyra-wave-grid-circles',
 					type: 'circle',
@@ -342,7 +321,6 @@
 					}
 				}, beforeId);
 
-				// direction arrows using symbol rotation
 				m.addLayer({
 					id: 'illyra-wave-grid-arrows',
 					type: 'symbol',
@@ -360,15 +338,12 @@
 				}, beforeId);
 			}
 
-			// periodic refresh (align with server cache)
 			if (waveRefreshTimer) clearInterval(waveRefreshTimer);
 			waveRefreshTimer = window.setInterval(refreshWaveData, 5 * 60 * 1000);
-		} catch {
-			// no-op on error
-		}
+		} catch {}
+
 	}
 
-	// ---------- Hazard cells (alerts derived from wave height via /api/sea/alerts) ----------
 	async function addHazardCellsLayer(m: maplibregl.Map) {
 		try {
 			const beforeId = findBeforeLabelLayerId(m);
@@ -385,7 +360,6 @@
 				} catch {}
 			}
 
-			// initial load
 			{
 				const res = await fetch('/api/sea/alerts');
 				if (!res.ok) return;
@@ -432,15 +406,12 @@
 				});
 			}
 
-			// periodic refresh (align with server cache)
 			if (hazardRefreshTimer) clearInterval(hazardRefreshTimer);
 			hazardRefreshTimer = window.setInterval(refreshHazardData, 5 * 60 * 1000);
-		} catch {
-			// no-op
-		}
+		} catch {}
+
 	}
 
-	// ---------- Underwater features (OSM Seamarks via /api/fish/underwater) ----------
 	async function addUnderwaterFeaturesLayer(m: maplibregl.Map) {
 		try {
 			const res = await fetch('/api/fish/underwater');
@@ -452,7 +423,6 @@
 				data: geojson
 			});
 
-			// Polygons (reefs / bigger obstructions)
 			m.addLayer({
 				id: 'illyra-underwater-areas-fill',
 				type: 'fill',
@@ -482,7 +452,6 @@
 				}
 			});
 
-			// Points (rocks, wrecks, fish havens, etc.)
 			m.addLayer({
 				id: 'illyra-underwater-points',
 				type: 'circle',
@@ -524,12 +493,9 @@
 			m.on('mouseleave', 'illyra-underwater-points', () => {
 				m.getCanvas().style.cursor = '';
 			});
-		} catch {
-			// no-op
-		}
+		} catch {}
 	}
 
-	// Selection (filter-based)
 	let selectedId: string | null = null;
 	function applySelectedFilter() {
 		const f = selectedId
@@ -543,7 +509,6 @@
 		} catch {}
 	}
 
-	// ---------- Map ----------
 	onMount(async () => {
 		map = new maplibregl.Map({
 			container: 'map',
@@ -560,7 +525,6 @@
 		});
 
 		map.on('load', async () => {
-			// Add AIS boat positions source and layer
 			map.addSource('ais-vessels', {
 				type: 'geojson',
 				data: { type: 'FeatureCollection', features: [] } as any
@@ -600,7 +564,6 @@
 				tiles: [
 					'https://ows.emodnet-bathymetry.eu/wms?' +
 						'SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&' +
-						// Use a sea-only layer (transparent on land)
 						'LAYERS=mean_multicolour&' +
 						'STYLES=&FORMAT=image/png&TRANSPARENT=true&' +
 						'CRS=EPSG:3857&WIDTH=256&HEIGHT=256&' +
@@ -625,15 +588,12 @@
 				beforeId
 			);
 
-			// After bathymetry, add wave grid layer
 			await addWaveGridLayer(map);
-			// Add hazard cells overlay (derived alerts)
 			await addHazardCellsLayer(map);
 
 			addPortsLayer();
 			await addUnderwaterFeaturesLayer(map);
 
-			// Open AIS stream only after the map is fully idle
 			try {
 				map.once('idle', () => {
 					setTimeout(() => {
@@ -646,7 +606,6 @@
 				connectAISWebSocket();
 			}
 
-			// Keep AIS on top even if the style reloads or dev HMR tweaks layers
 			map.on('styledata', () => {
 				bringAisToFront();
 			});

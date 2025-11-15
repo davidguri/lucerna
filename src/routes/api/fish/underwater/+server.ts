@@ -2,7 +2,6 @@ import type { RequestHandler } from './$types';
 
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 
-// All underwater-interesting seamarks in Albanian waters
 const OVERPASS_QUERY = `
 [out:json][timeout:25];
 area["ISO3166-1"="AL"]["admin_level"="2"]->.albania;
@@ -20,7 +19,6 @@ export const GET: RequestHandler = async () => {
     body: OVERPASS_QUERY,
     headers: {
       'Content-Type': 'text/plain;charset=UTF-8',
-      // Overpass etiquette
       'User-Agent': 'Illyra/0.1 (contact@illyra.app)'
     }
   });
@@ -68,7 +66,6 @@ export const GET: RequestHandler = async () => {
         properties: baseProps
       });
     }
-    // Relations can be added similarly if needed
   }
 
   const fc = {
